@@ -182,64 +182,6 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected }: {
           Drop an image here to update the texture
         </div>
       </Html>
-      {/* Transform mode controls - fixed at top-left, not child of object */}
-      <Html
-        style={{
-          position: 'fixed',
-          top: '20px',
-          left: '20px',
-          pointerEvents: 'auto',
-          zIndex: 1001
-        }}
-      >
-        <div style={{ display: 'flex', gap: '4px', backgroundColor: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <button
-            onClick={() => setTransformMode('translate')}
-            style={{
-              padding: '8px',
-              backgroundColor: transformMode === 'translate' ? '#3b82f6' : 'transparent',
-              color: transformMode === 'translate' ? 'white' : '#374151',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-            title="Move (W)"
-          >
-            ↔
-          </button>
-          <button
-            onClick={() => setTransformMode('rotate')}
-            style={{
-              padding: '8px',
-              backgroundColor: transformMode === 'rotate' ? '#3b82f6' : 'transparent',
-              color: transformMode === 'rotate' ? 'white' : '#374151',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-            title="Rotate (E)"
-          >
-            ⟲
-          </button>
-          <button
-            onClick={() => setTransformMode('scale')}
-            style={{
-              padding: '8px',
-              backgroundColor: transformMode === 'scale' ? '#3b82f6' : 'transparent',
-              color: transformMode === 'scale' ? 'white' : '#374151',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-            title="Scale (R)"
-          >
-            ⇅
-          </button>
-        </div>
-      </Html>
     </>
   )
 }
