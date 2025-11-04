@@ -1,7 +1,23 @@
 import { notFound } from 'next/navigation';
+import { supabase } from '../../../lib/supabase';
+import ARViewer from './ARViewer';
 
 interface ViewerPageProps {
   params: Promise<{ slug: string }>;
+}
+
+async function fetchProjectData(slug: string) {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('data')
+    .eq('slug', slug)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data.data;
 }
 
 export default async function ViewerPage({ params }: ViewerPageProps) {
@@ -11,10 +27,11 @@ export default async function ViewerPage({ params }: ViewerPageProps) {
     notFound();
   }
 
-  return (
-    <div className="min-h-screen p-8">
-      <h1 className="text-2xl font-bold mb-4">Viewer: {slug}</h1>
-      <p>Viewing content for slug: {slug}</p>
-    </div>
-  );
+  const projectData = await fetchProjectData(slug);
+
+  if (!projectData) {
+    notFound();
+  }
+
+  return <ARViewer projectData={projectData} />;
 }

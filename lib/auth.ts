@@ -4,7 +4,7 @@ import { supabaseUrl, supabaseAnonKey } from './supabase';
 
 const adapter = supabaseAdapter(supabaseUrl, supabaseAnonKey);
 
-export const lucia = new Lucia(adapter, {
+export const lucia = new Lucia(adapter(), {
   sessionCookie: {
     expires: false,
     attributes: {
