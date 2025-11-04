@@ -5,14 +5,14 @@ import { OrbitControls, TransformControls, Html, Grid, GizmoHelper, GizmoViewpor
 import { useState, useRef, useEffect } from 'react'
 import { Mesh, TextureLoader, Texture } from 'three'
 
-function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected }: {
+function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transformMode }: {
   onPointerMissed?: () => void
   isObjectSelected: boolean
   setIsObjectSelected: (selected: boolean) => void
+  transformMode: 'translate' | 'rotate' | 'scale'
 }) {
   const meshRef = useRef<Mesh>(null!)
   const [texture, setTexture] = useState<Texture | null>(null)
-  const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate')
   const [orbitEnabled, setOrbitEnabled] = useState(true)
 
   // Auto-select the default object on mount
