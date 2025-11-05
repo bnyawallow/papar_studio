@@ -14,6 +14,9 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
   const meshRef = useRef<Mesh>(null!)
   const [texture, setTexture] = useState<Texture | null>(null)
   const [orbitEnabled, setOrbitEnabled] = useState(true)
+  const [highlightPosition, setHighlightPosition] = useState<[number, number, number]>([0, 0, 0])
+  const [highlightRotation, setHighlightRotation] = useState<[number, number, number]>([0, 0, 0])
+  const [highlightScale, setHighlightScale] = useState<[number, number, number]>([1, 1, 1])
 
   // Auto-select the default object on mount
   useEffect(() => {
@@ -28,6 +31,25 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
       setTexture(loadedTexture)
     })
   }, [])
+
+  // Update highlight position, rotation, and scale when mesh transforms
+  useEffect(() => {
+    if (meshRef.current) {
+      const updateTransform = () => {
+        setHighlightPosition([meshRef.current.position.x, meshRef.current.position.y, meshRef.current.position.z])
+        setHighlightRotation([meshRef.current.rotation.x, meshRef.current.rotation.y, meshRef.current.rotation.z])
+        setHighlightScale([meshRef.current.scale.x, meshRef.current.scale.y, meshRef.current.scale.z])
+      }
+      updateTransform()
+      // Listen to transform controls changes
+      const handleTransformChange = () => updateTransform()
+      // Since TransformControls modifies the object directly, we need to poll for changes
+      const interval = setInterval(updateTransform, 16) // ~60fps
+      return () => {
+        clearInterval(interval)
+      }
+    }
+  }, [isObjectSelected])
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -119,7 +141,14 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
         infiniteGrid
       />
       {/* Textured plane */}
-      {isObjectSelected ? (
+      <mesh
+        ref={meshRef}
+        onClick={handleObjectClick}
+      >
+        <planeGeometry args={[5, 5]} />
+        <meshBasicMaterial map={texture} />
+      </mesh>
+      {isObjectSelected && (
         <TransformControls
           object={meshRef}
           mode={transformMode}
@@ -130,27 +159,11 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
           space="world"
           onMouseDown={() => setOrbitEnabled(false)}
           onMouseUp={() => setOrbitEnabled(true)}
-        >
-          <mesh
-            ref={meshRef}
-            onClick={handleObjectClick}
-          >
-            <planeGeometry args={[5, 5]} />
-            <meshBasicMaterial map={texture} />
-          </mesh>
-        </TransformControls>
-      ) : (
-        <mesh
-          ref={meshRef}
-          onClick={handleObjectClick}
-        >
-          <planeGeometry args={[5, 5]} />
-          <meshBasicMaterial map={texture} />
-        </mesh>
+        />
       )}
       {/* Blender-style outline highlight */}
       {isObjectSelected && (
-        <group>
+        <group position={highlightPosition} rotation={highlightRotation} scale={highlightScale}>
           {/* Outline edges - top */}
           <mesh position={[0, 2.5, 0.01]}>
             <boxGeometry args={[5, 0.05, 0.01]} />
