@@ -3,13 +3,69 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, TransformControls, Html, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei'
 import { useState, useRef, useEffect } from 'react'
-import { Mesh, TextureLoader, Texture } from 'three'
+import { Mesh, TextureLoader, Texture, Group } from 'three'
 
-function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transformMode }: {
+interface AssetItem {
+  id: string
+  name: string
+  type: '3d' | 'video' | 'text' | 'image'
+  url?: string
+}
+
+interface SceneObject {
+  id: string
+  asset: AssetItem
+  position: [number, number, number]
+  rotation: [number, number, number]
+  scale: [number, number, number]
+}
+
+interface SceneObject {
+  id: string
+  asset: AssetItem
+  position: [number, number, number]
+  rotation: [number, number, number]
+  scale: [number, number, number]
+  videoLoop?: boolean
+  chromaKey?: string
+  textColor?: string
+  textFont?: string
+  imageOpacity?: number
+}
+
+interface DefaultPlane {
+  id: string
+  name: string
+  type: 'plane'
+  position: [number, number, number]
+  rotation: [number, number, number]
+  scale: [number, number, number]
+}
+
+function Scene({
+  onPointerMissed,
+  isObjectSelected,
+  setIsObjectSelected,
+  transformMode,
+  draggedAsset,
+  sceneObjects,
+  selectedObjectId,
+  onObjectSelect,
+  onSceneObjectsUpdate,
+  defaultPlane,
+  onDefaultPlaneUpdate
+}: {
   onPointerMissed?: () => void
   isObjectSelected: boolean
   setIsObjectSelected: (selected: boolean) => void
   transformMode: 'translate' | 'rotate' | 'scale'
+  draggedAsset: AssetItem | null
+  sceneObjects: SceneObject[]
+  selectedObjectId: string | null
+  onObjectSelect: (objectId: string) => void
+  onSceneObjectsUpdate: (objects: SceneObject[]) => void
+  defaultPlane: DefaultPlane
+  onDefaultPlaneUpdate: (updates: Partial<DefaultPlane>) => void
 }) {
   const meshRef = useRef<Mesh>(null!)
   const [texture, setTexture] = useState<Texture | null>(null)
@@ -51,29 +107,46 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
     }
   }, [isObjectSelected])
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) {
-      const url = URL.createObjectURL(file)
-      const loader = new TextureLoader()
-      loader.load(url, (newTexture) => {
-        setTexture(newTexture)
-      })
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-  }
-
-  const handleObjectClick = () => {
+  const handleObjectClick = (objectId: string) => () => {
+    onObjectSelect(objectId)
     setIsObjectSelected(true)
   }
 
   const handlePointerMissed = () => {
+    onObjectSelect('')
     setIsObjectSelected(false)
     onPointerMissed?.()
+  }
+
+  const handleAssetDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    if (draggedAsset) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+
+      // Convert screen coordinates to world coordinates (simplified)
+      const worldX = x * 5
+      const worldZ = y * 5
+
+      const newObject: SceneObject = {
+        id: `${draggedAsset.id}-${Date.now()}`,
+        asset: draggedAsset,
+        position: [worldX, 0, worldZ],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+        videoLoop: false,
+        chromaKey: '#00ff00',
+        textColor: '#000000',
+        textFont: 'Arial'
+      }
+
+      onSceneObjectsUpdate([...sceneObjects, newObject])
+    }
+  }
+
+  const handleAssetDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
   }
 
   return (
@@ -140,15 +213,60 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
         fadeStrength={1}
         infiniteGrid
       />
-      {/* Textured plane */}
+      {/* Render scene objects */}
+      {sceneObjects.map((obj) => (
+        <group
+          key={obj.id}
+          position={obj.position}
+          rotation={obj.rotation}
+          scale={obj.scale}
+          onClick={handleObjectClick(obj.id)}
+        >
+          {obj.asset.type === '3d' && obj.asset.url && (
+            <mesh>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshBasicMaterial color="#ff6b6b" />
+            </mesh>
+          )}
+          {obj.asset.type === 'image' && obj.asset.url && (
+            <mesh>
+              <planeGeometry args={[2, 2]} />
+              <meshBasicMaterial
+                map={new TextureLoader().load(obj.asset.url)}
+                transparent
+                opacity={obj.imageOpacity || 1.0}
+              />
+            </mesh>
+          )}
+          {obj.asset.type === 'video' && obj.asset.url && (
+            <mesh>
+              <planeGeometry args={[2, 1]} />
+              <meshBasicMaterial color={obj.chromaKey || "#4ecdc4"} />
+            </mesh>
+          )}
+          {obj.asset.type === 'text' && (
+            <mesh>
+              <planeGeometry args={[1, 0.5]} />
+              <meshBasicMaterial color={obj.textColor || "#45b7d1"} />
+            </mesh>
+          )}
+        </group>
+      ))}
+
+      {/* Default plane */}
       <mesh
         ref={meshRef}
-        onClick={handleObjectClick}
+        position={defaultPlane.position}
+        rotation={defaultPlane.rotation}
+        scale={defaultPlane.scale}
+        onClick={handleObjectClick(defaultPlane.id)}
       >
         <planeGeometry args={[5, 5]} />
         <meshBasicMaterial map={texture} />
       </mesh>
-      {isObjectSelected && (
+
+      {/* Transform controls for selected object */}
+      {isObjectSelected && selectedObjectId && selectedObjectId === defaultPlane.id && (
         <TransformControls
           object={meshRef}
           mode={transformMode}
@@ -161,9 +279,10 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
           onMouseUp={() => setOrbitEnabled(true)}
         />
       )}
+
       {/* Blender-style outline highlight */}
-      {isObjectSelected && (
-        <group position={highlightPosition} rotation={highlightRotation} scale={highlightScale}>
+      {isObjectSelected && selectedObjectId === defaultPlane.id && (
+        <group position={defaultPlane.position} rotation={defaultPlane.rotation} scale={defaultPlane.scale}>
           {/* Outline edges - top */}
           <mesh position={[0, 2.5, 0.01]}>
             <boxGeometry args={[5, 0.05, 0.01]} />
@@ -193,34 +312,29 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
       >
         <GizmoViewport axisColors={['#ef4444', '#22c55e', '#3b82f6']} labelColor="black" />
       </GizmoHelper>
-      <Html
-        position={[0, 0, 0]}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          right: '20px',
-          padding: '16px',
-          border: '2px dashed #9ca3af',
-          borderRadius: '8px',
-          textAlign: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          pointerEvents: 'auto'
-        }}
-      >
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          style={{ width: '100%', height: '100%' }}
-        >
-          Drop an image here to update the texture
-        </div>
-      </Html>
     </>
   )
 }
 
-export default function EditorScene({ transformMode }: { transformMode: 'translate' | 'rotate' | 'scale' }) {
+export default function EditorScene({
+  transformMode,
+  draggedAsset,
+  sceneObjects,
+  selectedObjectId,
+  onObjectSelect,
+  onSceneObjectsUpdate,
+  defaultPlane,
+  onDefaultPlaneUpdate
+}: {
+  transformMode: 'translate' | 'rotate' | 'scale'
+  draggedAsset: AssetItem | null
+  sceneObjects: SceneObject[]
+  selectedObjectId: string | null
+  onObjectSelect: (objectId: string) => void
+  onSceneObjectsUpdate: (objects: SceneObject[]) => void
+  defaultPlane: DefaultPlane
+  onDefaultPlaneUpdate: (updates: Partial<DefaultPlane>) => void
+}) {
   const [isObjectSelected, setIsObjectSelected] = useState(false)
 
   return (
@@ -233,6 +347,13 @@ export default function EditorScene({ transformMode }: { transformMode: 'transla
         isObjectSelected={isObjectSelected}
         setIsObjectSelected={setIsObjectSelected}
         transformMode={transformMode}
+        draggedAsset={draggedAsset}
+        sceneObjects={sceneObjects}
+        selectedObjectId={selectedObjectId}
+        onObjectSelect={onObjectSelect}
+        onSceneObjectsUpdate={onSceneObjectsUpdate}
+        defaultPlane={defaultPlane}
+        onDefaultPlaneUpdate={onDefaultPlaneUpdate}
         onPointerMissed={() => setIsObjectSelected(false)}
       />
     </Canvas>

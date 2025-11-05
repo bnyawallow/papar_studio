@@ -1,10 +1,32 @@
 import { Lucia } from 'lucia';
-import supabaseAdapter from '@lucia-auth/adapter-supabase';
-import { supabaseUrl, supabaseAnonKey } from './supabase';
+import { supabase } from './supabase';
 
-const adapter = supabaseAdapter(supabaseUrl, supabaseAnonKey);
-
-export const lucia = new Lucia(adapter(), {
+export const lucia = new Lucia({
+  adapter: {
+    async getSessionAndUser(sessionId) {
+      // Implement session retrieval
+      return null;
+    },
+    async getUserSessions(userId) {
+      // Implement user sessions retrieval
+      return [];
+    },
+    async setSession(session) {
+      // Implement session creation
+    },
+    async updateSessionExpiration(sessionId, expiresAt) {
+      // Implement session expiration update
+    },
+    async deleteSession(sessionId) {
+      // Implement session deletion
+    },
+    async deleteUserSessions(userId) {
+      // Implement user sessions deletion
+    },
+    async deleteExpiredSessions() {
+      // Implement expired sessions deletion
+    }
+  },
   sessionCookie: {
     expires: false,
     attributes: {
