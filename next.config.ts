@@ -2,10 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@react-three/fiber', 'drei'],
+  serverExternalPackages: ['@react-three/fiber', 'drei'],
+  turbopack: {
+    root: 'c:/Users/Billy/Documents/projects/papar_studio',
   },
 };
 

@@ -107,13 +107,35 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
         infiniteGrid
       />
       {/* Textured plane */}
-      <mesh
-        ref={meshRef}
-        onClick={handleObjectClick}
-      >
-        <planeGeometry args={[5, 5]} />
-        <meshBasicMaterial map={texture} />
-      </mesh>
+      {isObjectSelected ? (
+        <TransformControls
+          object={meshRef}
+          mode={transformMode}
+          showX
+          showY
+          showZ
+          size={1}
+          space="world"
+          onMouseDown={() => setOrbitEnabled(false)}
+          onMouseUp={() => setOrbitEnabled(true)}
+        >
+          <mesh
+            ref={meshRef}
+            onClick={handleObjectClick}
+          >
+            <planeGeometry args={[5, 5]} />
+            <meshBasicMaterial map={texture} />
+          </mesh>
+        </TransformControls>
+      ) : (
+        <mesh
+          ref={meshRef}
+          onClick={handleObjectClick}
+        >
+          <planeGeometry args={[5, 5]} />
+          <meshBasicMaterial map={texture} />
+        </mesh>
+      )}
       {/* Blender-style outline highlight */}
       {isObjectSelected && (
         <group>
@@ -138,19 +160,6 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
             <meshBasicMaterial color="#007bff" />
           </mesh>
         </group>
-      )}
-      {isObjectSelected && (
-        <TransformControls
-          object={meshRef}
-          mode={transformMode}
-          showX
-          showY
-          showZ
-          size={1}
-          space="world"
-          onMouseDown={() => setOrbitEnabled(false)}
-          onMouseUp={() => setOrbitEnabled(true)}
-        />
       )}
       {/* Axis gizmo */}
       <GizmoHelper
@@ -186,7 +195,7 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
   )
 }
 
-export default function EditorScene() {
+export default function EditorScene({ transformMode }: { transformMode: 'translate' | 'rotate' | 'scale' }) {
   const [isObjectSelected, setIsObjectSelected] = useState(false)
 
   return (
@@ -198,6 +207,7 @@ export default function EditorScene() {
       <Scene
         isObjectSelected={isObjectSelected}
         setIsObjectSelected={setIsObjectSelected}
+        transformMode={transformMode}
         onPointerMissed={() => setIsObjectSelected(false)}
       />
     </Canvas>
