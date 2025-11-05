@@ -64,37 +64,49 @@ function Scene({ onPointerMissed, isObjectSelected, setIsObjectSelected, transfo
       />
       {/* Infinite axis lines */}
       <group>
-        {/* X-axis (Red) - extends infinitely in +X direction */}
-        <mesh position={[50, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.005, 0.005, 100]} />
+        {/* X-axis (Red) - extends infinitely in both directions */}
+        <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.005, 0.005, 2000]} />
           <meshBasicMaterial color="#ef4444" />
         </mesh>
-        <mesh position={[100, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <mesh position={[1000, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
           <coneGeometry args={[0.05, 0.15]} />
           <meshBasicMaterial color="#ef4444" />
         </mesh>
-        {/* Y-axis (Green) - extends infinitely in +Y direction */}
-        <mesh position={[0, 50, 0]}>
-          <cylinderGeometry args={[0.005, 0.005, 100]} />
+        <mesh position={[-1000, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <coneGeometry args={[0.05, 0.15]} />
+          <meshBasicMaterial color="#ef4444" />
+        </mesh>
+        {/* Y-axis (Green) - extends infinitely in both directions */}
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.005, 0.005, 2000]} />
           <meshBasicMaterial color="#22c55e" />
         </mesh>
-        <mesh position={[0, 100, 0]}>
+        <mesh position={[0, 1000, 0]}>
           <coneGeometry args={[0.05, 0.15]} />
           <meshBasicMaterial color="#22c55e" />
         </mesh>
-        {/* Z-axis (Blue) - extends infinitely in +Z direction */}
-        <mesh position={[0, 0, 50]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.005, 0.005, 100]} />
+        <mesh position={[0, -1000, 0]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.05, 0.15]} />
+          <meshBasicMaterial color="#22c55e" />
+        </mesh>
+        {/* Z-axis (Blue) - extends infinitely in both directions */}
+        <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.005, 0.005, 2000]} />
           <meshBasicMaterial color="#3b82f6" />
         </mesh>
-        <mesh position={[0, 0, 100]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0, 0, 1000]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.05, 0.15]} />
+          <meshBasicMaterial color="#3b82f6" />
+        </mesh>
+        <mesh position={[0, 0, -1000]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.05, 0.15]} />
           <meshBasicMaterial color="#3b82f6" />
         </mesh>
       </group>
       {/* Grid ground plane */}
       <Grid
-        position={[0, -2, 0]}
+        position={[0, 0, 0]}
         args={[20, 20]}
         cellSize={1}
         cellThickness={0.5}
